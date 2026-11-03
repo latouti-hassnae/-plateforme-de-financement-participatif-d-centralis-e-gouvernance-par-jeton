@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { BrowserProvider } from "ethers";
+import { BrowserProvider, Contract, formatEther } from "ethers";
+import { ADDRESSES, TOKEN_ABI } from "./contracts";
 
 declare global {
   interface Window {
@@ -157,6 +158,11 @@ export default function App() {
     const provider = new BrowserProvider(window.ethereum);
     const accounts = await provider.send("eth_requestAccounts", []);
     setAccount(accounts[0]);
+
+    // Test de lecture : solde CFD du compte connecté
+    const token = new Contract(ADDRESSES.token, TOKEN_ABI, provider);
+    const balance = await token.balanceOf(accounts[0]);
+    console.log("Mon solde CFD :", formatEther(balance));
   }
 
   return (
