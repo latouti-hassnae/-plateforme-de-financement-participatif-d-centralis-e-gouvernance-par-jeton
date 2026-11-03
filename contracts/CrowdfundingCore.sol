@@ -4,10 +4,7 @@ pragma solidity ^0.8.20;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
-interface ICFDToken {
-    function mintForContribution(address to, uint256 weiAmount) external;
-}
+import {ICFDToken} from "./interfaces/ICFDToken.sol";
 
 contract CrowdfundingCore is AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -112,7 +109,8 @@ contract CrowdfundingCore is AccessControl, Pausable, ReentrancyGuard {
         contributions[id][msg.sender] += msg.value;
 
         // Interactions
-        token.mintForContribution(msg.sender, msg.value);
+        uint256 minted = token.mintForContribution(msg.sender, msg.value);
+        require(minted > 0, "Aucun CFD frappe");
 
         emit Contributed(id, msg.sender, msg.value);
     }

@@ -5,8 +5,9 @@ import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20P
 import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
+import {ICFDToken} from "./interfaces/ICFDToken.sol";
 
-contract CFDToken is ERC20, ERC20Permit, ERC20Votes, AccessControl {
+contract CFDToken is ERC20, ERC20Permit, ERC20Votes, AccessControl, ICFDToken {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /// 1 ETH contribué = 1000 CFD
@@ -22,6 +23,7 @@ contract CFDToken is ERC20, ERC20Permit, ERC20Votes, AccessControl {
 
     function mintForContribution(address to, uint256 weiAmount)
         external
+        override
         onlyRole(MINTER_ROLE)
         returns (uint256 minted)
     {
