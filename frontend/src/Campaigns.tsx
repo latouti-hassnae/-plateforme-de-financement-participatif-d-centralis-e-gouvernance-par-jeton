@@ -1,8 +1,10 @@
 // frontend/src/Campaigns.tsx
-// Liste des campagnes (lecture du Core) + formulaire de contribution
+// Liste des campagnes (lecture du Core) + création + formulaire de contribution
 import { useCallback, useEffect, useState } from "react";
 import { BrowserProvider, Contract, formatEther, parseEther } from "ethers";
 import { ADDRESSES, CORE_ABI, TOKEN_ABI } from "./contracts";
+import { fetchMetadata, type Metadata } from "./ipfs";
+import CreateCampaign from "./CreateCampaign";
 
 // Même ordre que l'enum Status du contrat : Active, Successful, Failed, Cancelled
 const STATUTS = ["En cours", "Réussie", "Échouée", "Annulée"];
@@ -24,6 +26,7 @@ export default function Campaigns() {
   const [montants, setMontants] = useState<Record<number, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [metas, setMetas] = useState<Record<number, Metadata | null>>({});
 
   const charger = useCallback(async () => {
     try {
@@ -51,6 +54,16 @@ export default function Campaigns() {
         });
       }
       setListe(resultat);
+
+      // Lecture des métadonnées (titre, description) depuis IPFS
+      const m: Record<number, Metadata | null> = {};
+      await Promise.all(
+        resultat.map(async (c) => {
+          m[c.id] = await fetchMetadata(c.cid);
+        })
+      );
+      setMetas(m);
+
       setErreur(null);
     } catch (e) {
       console.error(e);
@@ -100,6 +113,8 @@ export default function Campaigns() {
     <section style={{ padding: "0 24px 24px" }}>
       <h2>Campagnes</h2>
 
+      <CreateCampaign onCreated={charger} />
+
       {chargement && <p>Chargement…</p>}
       {erreur && <p>{erreur}</p>}
       {message && <p>{message}</p>}
@@ -107,6 +122,7 @@ export default function Campaigns() {
 
       {liste.map((c) => {
         const pourcent = c.objectif > 0n ? Number((c.collecte * 100n) / c.objectif) : 0;
+        const meta = metas[c.id];
         return (
           <div className="card" key={c.id} style={{ marginBottom: 16 }}>
             <h3>
@@ -125,7 +141,15 @@ export default function Campaigns() {
             <div className="caption">
               Bénéficiaire : {c.beneficiaire.slice(0, 6)}…{c.beneficiaire.slice(-4)}
             </div>
-            <div className="caption">Métadonnées : {c.cid}</div>
+
+            {meta ? (
+              <>
+                <h4>{meta.title}</h4>
+                <p>{meta.description}</p>
+              </>
+            ) : (
+              <div className="caption">Métadonnées indisponibles (CID : {c.cid})</div>
+            )}
 
             {c.statut === 0 && (
               <div style={{ marginTop: 16, display: "flex", gap: 8, alignItems: "center" }}>

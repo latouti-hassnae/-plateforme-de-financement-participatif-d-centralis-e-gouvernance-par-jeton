@@ -20,3 +20,14 @@ export async function uploadMetadata(title: string, description: string): Promis
 export function ipfsUrl(cid: string): string {
   return `https://gateway.pinata.cloud/ipfs/${cid}`;
 }
+export type Metadata = { title: string; description: string };
+
+export async function fetchMetadata(cid: string): Promise<Metadata | null> {
+  try {
+    const res = await fetch(ipfsUrl(cid));
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null; // CID de démonstration ou passerelle indisponible
+  }
+}
