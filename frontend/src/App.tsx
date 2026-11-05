@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { BrowserProvider, Contract, formatEther } from "ethers";
 import { ADDRESSES, TOKEN_ABI } from "./contracts";
-
+import Campaigns from "./Campaigns";
+import Proposals from "./Proposals";
 declare global {
   interface Window {
     ethereum?: any;
@@ -227,6 +228,8 @@ export default function App() {
             <div className="caption">fonds sécurisés (exemple)</div>
           </div>
         </section>
+        <Campaigns />
+        <Proposals />
       </main>
     </>
   );
