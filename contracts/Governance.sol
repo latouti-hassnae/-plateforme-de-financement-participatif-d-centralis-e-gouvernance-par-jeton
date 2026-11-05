@@ -7,7 +7,6 @@ import {ICrowdfunding} from "./interfaces/ICrowdfunding.sol";
 
 contract Governance is ReentrancyGuard {
     enum ProposalType { EarlyRelease, Freeze }
-
     struct Proposal {
         uint256 campaignId;
         ProposalType pType;
@@ -42,6 +41,8 @@ contract Governance is ReentrancyGuard {
     function propose(uint256 campaignId, ProposalType pType, string calldata description)
         external returns (uint256 id)
     {
+        require(campaignId >= 1 && campaignId <= core.campaignCount(), "Unknown campaign");
+        require(campaignId >= 1 && campaignId <= core.campaignCount(), "Unknown campaign");
         uint256 snap = block.number - 1;
         require(token.getPastVotes(msg.sender, snap) > 0, "No voting power");
 

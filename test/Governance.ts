@@ -55,6 +55,19 @@ describe("Governance", () => {
     );
   });
 
+  it("refuse une proposition sur une campagne inexistante", async () => {
+    // Le mock déclare 3 campagnes : l'id 0 et l'id 4 n'existent pas
+    await assert.rejects(
+      governance.connect(alice).propose(0, EARLY_RELEASE, "x"),
+      /Unknown campaign/
+    );
+    await assert.rejects(
+      governance.connect(alice).propose(4, EARLY_RELEASE, "x"),
+      /Unknown campaign/
+    );
+    assert.equal(await governance.proposalCount(), 0n);
+  });
+
   it("compte le poids du vote égal au solde au snapshot", async () => {
     await governance.connect(alice).propose(CAMPAIGN_ID, EARLY_RELEASE, "x");
     await governance.connect(alice).vote(1, true);
