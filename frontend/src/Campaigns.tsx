@@ -1,5 +1,5 @@
 // frontend/src/Campaigns.tsx
-// Liste des campagnes (lecture du Core) + création + formulaire de contribution
+// Liste des campagnes (lecture du Core) + création + contribution + remboursement + retrait
 import { useCallback, useEffect, useState } from "react";
 import { BrowserProvider, Contract, formatEther, parseEther } from "ethers";
 import { ADDRESSES, CORE_ABI, TOKEN_ABI } from "./contracts";
@@ -17,6 +17,7 @@ type Campagne = {
   echeance: bigint;
   cid: string;
   statut: number;
+  retiree: boolean;
 };
 
 export default function Campaigns() {
@@ -27,6 +28,7 @@ export default function Campaigns() {
   const [envoiEnCours, setEnvoiEnCours] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [metas, setMetas] = useState<Record<number, Metadata | null>>({});
+  const [moi, setMoi] = useState<string | null>(null);
 
   const charger = useCallback(async () => {
     try {
@@ -36,6 +38,10 @@ export default function Campaigns() {
       }
       const provider = new BrowserProvider(window.ethereum);
       const core = new Contract(ADDRESSES.core, CORE_ABI, provider);
+
+      // Compte actuellement connecté (pour reconnaître le bénéficiaire)
+      const comptes = await provider.listAccounts();
+      setMoi(comptes.length > 0 ? comptes[0].address : null);
 
       const total = Number(await core.campaignCount());
       const resultat: Campagne[] = [];
@@ -51,6 +57,7 @@ export default function Campaigns() {
           echeance: c.deadline,
           cid: c.ipfsHash,
           statut,
+          retiree: Boolean(c.withdrawn),
         });
       }
       setListe(resultat);
@@ -109,6 +116,33 @@ export default function Campaigns() {
     }
   }
 
+  // Remboursement (campagne échouée ou annulée) ou retrait (campagne réussie)
+  async function agir(id: number, action: "refund" | "withdrawFunds") {
+    setMessage(null);
+    try {
+      setEnvoiEnCours(id);
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const core = new Contract(ADDRESSES.core, CORE_ABI, signer);
+
+      const tx = await core[action](id);
+      setMessage("Transaction envoyée, en attente de confirmation…");
+      await tx.wait();
+
+      setMessage(
+        action === "refund"
+          ? `Remboursement effectué pour la campagne #${id}.`
+          : `Fonds retirés pour la campagne #${id} (98 % au bénéficiaire, 2 % à la trésorerie).`
+      );
+      await charger();
+    } catch (e: any) {
+      console.error(e);
+      setMessage(`Échec : ${e?.reason ?? e?.shortMessage ?? "transaction refusée"}`);
+    } finally {
+      setEnvoiEnCours(null);
+    }
+  }
+
   return (
     <section style={{ padding: "0 24px 24px" }}>
       <h2>Campagnes</h2>
@@ -123,10 +157,12 @@ export default function Campaigns() {
       {liste.map((c) => {
         const pourcent = c.objectif > 0n ? Number((c.collecte * 100n) / c.objectif) : 0;
         const meta = metas[c.id];
+        const estBeneficiaire = !!moi && moi.toLowerCase() === c.beneficiaire.toLowerCase();
         return (
           <div className="card" key={c.id} style={{ marginBottom: 16 }}>
             <h3>
               Campagne #{c.id} · {STATUTS[c.statut]}
+              {c.retiree ? " · fonds retirés" : ""}
             </h3>
             <div className="big">
               {formatEther(c.collecte)} / {formatEther(c.objectif)} ETH
@@ -140,6 +176,7 @@ export default function Campaigns() {
             </div>
             <div className="caption">
               Bénéficiaire : {c.beneficiaire.slice(0, 6)}…{c.beneficiaire.slice(-4)}
+              {estBeneficiaire ? " (toi)" : ""}
             </div>
 
             {meta ? (
@@ -165,6 +202,28 @@ export default function Campaigns() {
                 <button className="btn" disabled={envoiEnCours === c.id} onClick={() => contribuer(c.id)}>
                   {envoiEnCours === c.id ? "Envoi…" : "Contribuer"}
                 </button>
+              </div>
+            )}
+
+            {/* Campagne échouée ou annulée : chaque contributeur peut se faire rembourser */}
+            {(c.statut === 2 || c.statut === 3) && (
+              <div style={{ marginTop: 16 }}>
+                <button className="btn" disabled={envoiEnCours === c.id} onClick={() => agir(c.id, "refund")}>
+                  {envoiEnCours === c.id ? "Envoi…" : "Se faire rembourser"}
+                </button>
+                <div className="caption">Possible seulement si tu as contribué avec le compte connecté.</div>
+              </div>
+            )}
+
+            {/* Campagne réussie : le bénéficiaire retire les fonds */}
+            {c.statut === 1 && !c.retiree && estBeneficiaire && (
+              <div style={{ marginTop: 16 }}>
+                <button className="btn" disabled={envoiEnCours === c.id} onClick={() => agir(c.id, "withdrawFunds")}>
+                  {envoiEnCours === c.id ? "Envoi…" : "Retirer les fonds"}
+                </button>
+                <div className="caption">
+                  Possible après l'échéance, ou avant si la gouvernance a approuvé le déblocage anticipé.
+                </div>
               </div>
             )}
           </div>
