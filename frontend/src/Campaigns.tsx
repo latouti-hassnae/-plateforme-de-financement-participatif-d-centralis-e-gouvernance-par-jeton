@@ -84,7 +84,15 @@ export default function Campaigns() {
   useEffect(() => {
     charger();
   }, [charger]);
-
+  // Recharge quand le compte MetaMask change
+  useEffect(() => {
+    if (!window.ethereum) return;
+    const surChangement = () => {
+      charger();
+    };
+    window.ethereum.on("accountsChanged", surChangement);
+    return () => window.ethereum.removeListener("accountsChanged", surChangement);
+  }, [charger]);
   async function contribuer(id: number) {
     setMessage(null);
     const montant = montants[id];

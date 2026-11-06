@@ -85,7 +85,15 @@ export default function Proposals() {
   useEffect(() => {
     charger();
   }, [charger]);
-
+  // Recharge quand le compte MetaMask change
+  useEffect(() => {
+    if (!window.ethereum) return;
+    const surChangement = () => {
+      charger();
+    };
+    window.ethereum.on("accountsChanged", surChangement);
+    return () => window.ethereum.removeListener("accountsChanged", surChangement);
+  }, [charger]);
   // Envoie une transaction vers Governance, puis recharge les données
   async function envoyer(action: (gov: Contract) => Promise<any>, succes: string) {
     setMessage(null);
