@@ -27,6 +27,7 @@ export default function Campaigns() {
   const [montants, setMontants] = useState<Record<number, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageCarte, setMessageCarte] = useState<{ id: number; texte: string } | null>(null);
   const [metas, setMetas] = useState<Record<number, Metadata | null>>({});
   const [moi, setMoi] = useState<string | null>(null);
 
@@ -118,7 +119,7 @@ export default function Campaigns() {
 
   // Remboursement (campagne échouée ou annulée) ou retrait (campagne réussie)
   async function agir(id: number, action: "refund" | "withdrawFunds") {
-    setMessage(null);
+    setMessageCarte({ id, texte: "Envoi en cours, confirme dans MetaMask…" });
     try {
       setEnvoiEnCours(id);
       const provider = new BrowserProvider(window.ethereum);
@@ -126,18 +127,23 @@ export default function Campaigns() {
       const core = new Contract(ADDRESSES.core, CORE_ABI, signer);
 
       const tx = await core[action](id);
-      setMessage("Transaction envoyée, en attente de confirmation…");
+      setMessageCarte({ id, texte: "Transaction envoyée, en attente de confirmation…" });
       await tx.wait();
 
-      setMessage(
-        action === "refund"
-          ? `Remboursement effectué pour la campagne #${id}.`
-          : `Fonds retirés pour la campagne #${id} (98 % au bénéficiaire, 2 % à la trésorerie).`
-      );
+      setMessageCarte({
+        id,
+        texte:
+          action === "refund"
+            ? `Remboursement effectué pour la campagne #${id}.`
+            : `Fonds retirés pour la campagne #${id} (98 % au bénéficiaire, 2 % à la trésorerie).`,
+      });
       await charger();
     } catch (e: any) {
       console.error(e);
-      setMessage(`Échec : ${e?.reason ?? e?.shortMessage ?? "transaction refusée"}`);
+      setMessageCarte({
+        id,
+        texte: `Échec : ${e?.reason ?? e?.shortMessage ?? e?.message ?? "transaction refusée"}`,
+      });
     } finally {
       setEnvoiEnCours(null);
     }
@@ -226,6 +232,9 @@ export default function Campaigns() {
                 </div>
               </div>
             )}
+
+            {/* Résultat de la dernière action sur cette carte */}
+            {messageCarte?.id === c.id && <p>{messageCarte.texte}</p>}
           </div>
         );
       })}
