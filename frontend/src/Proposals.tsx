@@ -168,10 +168,11 @@ export default function Proposals() {
         const pourcentPour = totalVoix > 0n ? Number((p.pour * 100n) / totalVoix) : 0;
         const voteOuvert = maintenant < p.deadline;
         const quorumAtteint = totalVoix >= p.quorum;
+        const adoptee = quorumAtteint && p.pour > p.contre;
 
         let etat = "Vote en cours";
         if (p.executee) etat = "Exécutée";
-        else if (!voteOuvert) etat = "Vote terminé";
+        else if (!voteOuvert) etat = adoptee ? "Adoptée : à exécuter" : "Rejetée";
 
         return (
           <div className="card" key={p.id} style={{ marginBottom: 16 }}>
@@ -220,7 +221,8 @@ export default function Proposals() {
                 </>
               )}
               {voteOuvert && !p.executee && p.aVote && <div className="caption">Tu as déjà voté.</div>}
-              {!voteOuvert && !p.executee && (
+
+              {!voteOuvert && !p.executee && adoptee && (
                 <button
                   className="btn"
                   disabled={occupe}
@@ -228,6 +230,11 @@ export default function Proposals() {
                 >
                   Exécuter
                 </button>
+              )}
+              {!voteOuvert && !p.executee && !adoptee && (
+                <div className="caption">
+                  Proposition rejetée ({quorumAtteint ? "majorité contre" : "quorum non atteint"}) : aucune action sur le Core.
+                </div>
               )}
             </div>
           </div>

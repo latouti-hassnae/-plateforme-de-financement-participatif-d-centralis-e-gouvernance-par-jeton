@@ -3,15 +3,12 @@ import { BrowserProvider, Contract, formatEther } from "ethers";
 import { ADDRESSES, TOKEN_ABI } from "./contracts";
 import Campaigns from "./Campaigns";
 import Proposals from "./Proposals";
+import Stats from "./Stats";
 declare global {
   interface Window {
     ethereum?: any;
   }
 }
-
-// Valeurs d'exemple, à remplacer plus tard par les données des contrats
-const YES_PERCENT = 68;
-const NO_PERCENT = 100 - YES_PERCENT;
 
 // Un cube isométrique : une face du dessus et deux faces latérales
 function Cube({ x, y }: { x: number; y: number }) {
@@ -202,32 +199,7 @@ export default function App() {
           </div>
           <Illustration />
         </section>
-
-        <section className="stats">
-          <div className="card">
-            <h3>Campaigns</h3>
-            <div className="big">12</div>
-            <div className="caption">campagnes actives (exemple)</div>
-          </div>
-
-          <div className="card">
-            <h3>Governance vote</h3>
-            <div className="vote-bar">
-              <div className="vote-yes" style={{ width: `${YES_PERCENT}%` }} />
-              <div className="vote-no" style={{ width: `${NO_PERCENT}%` }} />
-            </div>
-            <div className="vote-legend">
-              <span>Yes {YES_PERCENT}%</span>
-              <span>No {NO_PERCENT}%</span>
-            </div>
-          </div>
-
-          <div className="card">
-            <h3>Vault</h3>
-            <div className="big">34,5 ETH</div>
-            <div className="caption">fonds sécurisés (exemple)</div>
-          </div>
-        </section>
+        <Stats /> 
         <Campaigns />
         <Proposals />
       </main>
