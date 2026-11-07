@@ -4,7 +4,7 @@
 import CoreArtifact from "./abi/CrowdfundingCore.json";
 import TokenArtifact from "./abi/CFDToken.json";
 import GovernanceArtifact from "./abi/Governance.json";
-
+import TreasuryArtifact from "./abi/MultiSigTreasury.json";
 export const ADDRESSES = {
   token: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
   treasury: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
@@ -16,3 +16,4 @@ export const ADDRESSES = {
 export const CORE_ABI = CoreArtifact.abi;
 export const TOKEN_ABI = TokenArtifact.abi;
 export const GOVERNANCE_ABI = GovernanceArtifact.abi;
+export const TREASURY_ABI = TreasuryArtifact.abi;
