@@ -1,57 +1,84 @@
-# Sample Hardhat 3 Project (`mocha` and `ethers`)
+# Plateforme de financement participatif décentralisée (gouvernance par jeton)
 
-This project showcases a Hardhat 3 project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+Mini-projet Blockchain, ENSA Béni Mellal.
+Encadrant : Pr. Hamza Touil.
+Binôme : Hassnae Latouti, Ferdaous Kouzi.
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+## Présentation
 
-## Project Overview
+Plateforme de crowdfunding sur Ethereum. Chaque contribution en ETH est
+convertie en jetons de gouvernance **CFD** (1 ETH = 1000 CFD). Les détenteurs
+de jetons votent sur les décisions de la plateforme.
 
-This example project includes:
+## Fonctionnalités
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+- Création de campagnes (objectif, date limite, description stockée sur IPFS).
+- Contribution en ETH et réception automatique de jetons CFD.
+- Remboursement si la campagne échoue.
+- Retrait des fonds par le créateur si la campagne réussit.
+- Gouvernance : propositions, vote pondéré par les jetons, exécution.
+- Trésorerie multi-signature (2 signatures sur 3) pour les montants élevés.
 
-## Usage
+## Architecture
 
-### Running Tests
+| Contrat | Rôle |
+|---|---|
+| `CFDToken` | Jeton ERC20 avec votes (ERC20Votes) et permit |
+| `CrowdfundingCore` | Campagnes, contributions, remboursements, retraits |
+| `MultiSigTreasury` | Trésorerie à signatures multiples |
+| `Governance` | Propositions et votes |
 
-To run all the tests in the project, execute the following command:
+Rôles : `MINTER_ROLE`, `GOVERNANCE_ROLE`, `PAUSER_ROLE`.
+Frais de plateforme : 2 % envoyés à la trésorerie.
+Quorum : 10 %, majorité simple, vote de 3 jours.
 
-```shell
+## Technologies
+
+Solidity 0.8.34, Hardhat 3, OpenZeppelin, ethers.js, React + Vite,
+IPFS (Pinata), Slither.
+
+## Installation
+
+```bash
+npm install
+cd frontend
+npm install
+```
+
+## Utilisation en local
+
+```bash
+npx hardhat compile
 npx hardhat test
+npx hardhat node
 ```
 
-You can also selectively run the Solidity or `mocha` tests:
+Dans un deuxième terminal :
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
+```bash
+npx hardhat run scripts/deploy.ts --network localhost
+cd frontend
+npm run dev
 ```
 
-### Make a deployment to Sepolia
+## Déploiement Sepolia
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+Les adresses déployées sont dans `docs/sepolia-addresses.json`.
+Les contrats sont vérifiés sur Etherscan.
 
-To run the deployment to a local chain:
+Configuration : copier les variables nécessaires dans un fichier `.env`
+(clé RPC, clé de test, clé Etherscan, clé Pinata). Ce fichier n'est jamais
+envoyé sur Git.
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+## Sécurité
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+- Protection contre la réentrance (`ReentrancyGuard`) et schéma « effets avant interactions ».
+- Contrôle d'accès par rôles (`AccessControl`) et mise en pause (`Pausable`).
+- Audit Slither : voir `docs/slither-analyse.md`.
+- Décisions de conception : voir `docs/decisions.md`.
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+## Documentation
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+- Rapport final : `docs/Rapport_mini_projet_blockchain_final.pdf`
+- Audit de sécurité : `docs/slither-analyse.md`
+- Décisions : `docs/decisions.md`
