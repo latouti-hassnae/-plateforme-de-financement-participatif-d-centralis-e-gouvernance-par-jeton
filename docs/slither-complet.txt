@@ -1,0 +1,58 @@
+'npx hardhat clean' running (wd: C:\Users\LATOUTI\miniProjetBlck\crowdfunding-dao)
+'npx hardhat clean --global' running (wd: C:\Users\LATOUTI\miniProjetBlck\crowdfunding-dao)
+'npx hardhat compile --force' running (wd: C:\Users\LATOUTI\miniProjetBlck\crowdfunding-dao)
+INFO:Detectors:
+Detector: timestamp
+CrowdfundingCore.contribute(uint256) (contracts/CrowdfundingCore.sol#99-116) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(c.beneficiary != address(0),Campagne inexistante) (contracts/CrowdfundingCore.sol#101)
+	- require(bool,string)(! c.frozen,Campagne gelee) (contracts/CrowdfundingCore.sol#103)
+	- require(bool,string)(! c.withdrawn,Fonds deja retires) (contracts/CrowdfundingCore.sol#104)
+	- require(bool,string)(block.timestamp < c.deadline,Campagne terminee) (contracts/CrowdfundingCore.sol#105)
+CrowdfundingCore.refund(uint256) (contracts/CrowdfundingCore.sol#118-136) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(c.beneficiary != address(0),Campagne inexistante) (contracts/CrowdfundingCore.sol#120)
+CrowdfundingCore.withdrawFunds(uint256) (contracts/CrowdfundingCore.sol#138-163) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(c.beneficiary != address(0),Campagne inexistante) (contracts/CrowdfundingCore.sol#140)
+	- require(bool,string)(msg.sender == c.beneficiary,Beneficiaire uniquement) (contracts/CrowdfundingCore.sol#141)
+	- require(bool,string)(! c.withdrawn,Fonds deja retires) (contracts/CrowdfundingCore.sol#142)
+	- require(bool,string)(block.timestamp >= c.deadline || c.earlyReleaseApproved,Echeance non atteinte) (contracts/CrowdfundingCore.sol#144-147)
+CrowdfundingCore.approveEarlyRelease(uint256) (contracts/CrowdfundingCore.sol#169-176) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(c.beneficiary != address(0),Campagne inexistante) (contracts/CrowdfundingCore.sol#171)
+	- require(bool,string)(! c.withdrawn,Fonds deja retires) (contracts/CrowdfundingCore.sol#172)
+CrowdfundingCore.freezeCampaign(uint256) (contracts/CrowdfundingCore.sol#178-185) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(c.beneficiary != address(0),Campagne inexistante) (contracts/CrowdfundingCore.sol#180)
+	- require(bool,string)(! c.withdrawn,Fonds deja retires) (contracts/CrowdfundingCore.sol#181)
+CrowdfundingCore.getStatus(uint256) (contracts/CrowdfundingCore.sol#191-199) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(c.beneficiary != address(0),Campagne inexistante) (contracts/CrowdfundingCore.sol#193)
+	- block.timestamp < c.deadline (contracts/CrowdfundingCore.sol#197)
+CrowdfundingCore.getCampaign(uint256) (contracts/CrowdfundingCore.sol#201-204) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(campaigns[id].beneficiary != address(0),Campagne inexistante) (contracts/CrowdfundingCore.sol#202)
+Governance.vote(uint256,bool) (contracts/Governance.sol#61-74) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(p.snapshotBlock != 0,Unknown proposal) (contracts/Governance.sol#63)
+	- require(bool,string)(block.timestamp < p.deadline,Voting closed) (contracts/Governance.sol#64)
+Governance.execute(uint256) (contracts/Governance.sol#76-90) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(p.snapshotBlock != 0,Unknown proposal) (contracts/Governance.sol#78)
+	- require(bool,string)(block.timestamp >= p.deadline,Voting not ended) (contracts/Governance.sol#79)
+	- require(bool,string)(! p.executed,Already executed) (contracts/Governance.sol#80)
+	- require(bool,string)(p.forVotes + p.againstVotes >= p.quorumVotes,Quorum not reached) (contracts/Governance.sol#81)
+	- require(bool,string)(p.forVotes > p.againstVotes,Majority not reached) (contracts/Governance.sol#82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in CrowdfundingCore.refund(uint256) (contracts/CrowdfundingCore.sol#118-136):
+	- (ok,None) = address(msg.sender).call{value: amount}() (contracts/CrowdfundingCore.sol#132)
+Low level call in CrowdfundingCore.withdrawFunds(uint256) (contracts/CrowdfundingCore.sol#138-163):
+	- (okFee,None) = treasury.call{value: fee}() (contracts/CrowdfundingCore.sol#156)
+	- (okPay,None) = c.beneficiary.call{value: payout}() (contracts/CrowdfundingCore.sol#159)
+Low level call in MultiSigTreasury.execute(uint256) (contracts/MultiSigTreasury.sol#82-94):
+	- (ok,None) = address(t.to).call{value: t.value}() (contracts/MultiSigTreasury.sol#90)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:. analyzed (69 contracts with 102 detectors), 12 result(s) found
